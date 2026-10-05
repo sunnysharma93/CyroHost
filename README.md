@@ -1,36 +1,70 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# CyroHost
 
-## Getting Started
+Marketing site for CyroHost cloud, networking, edge, and web infrastructure.
 
-First, run the development server:
+## Account API
+
+Sign-in is a separate Spring Boot service in `backend/`. Setup, PostgreSQL, OAuth, and email steps are in `backend/README.md`. The site keeps working if that API is not running; login then says the service is not reachable.
+
+## Commands
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm run build
+npm start
+npm run lint
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The dev server runs at `http://localhost:3000`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Contact form
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+`/contact` validates with Zod in the browser and again in `POST /api/contact`.
 
-## Learn More
+If `CONTACT_WEBHOOK_URL` is unset, the API returns `503` with `error: "not_configured"` and the page tells the visitor the message was **not** sent. Copy `.env.example` to `.env.local` and set the webhook only when a real endpoint exists. The webhook receives JSON: `name`, `email`, `organisation`, `interest`, `message`, `source`. No API keys belong in client code.
 
-To learn more about Next.js, take a look at the following resources:
+## What was verified on 3 October 2026
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Checked against `https://www.cyrohost.com/` and `https://network-india.cyrohost.com/`.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- India VPS is published as AMD and Intel lines. Singapore VPS is published as Intel. No general VPS price, disk, or OS list was on those pages.
+- Minecraft India starts at ₹100/month (AMD EPYC 4464P). Minecraft Singapore starts at ₹80/month (Intel Xeon E-2136).
+- Hytale lists four card prices (₹1,000, ₹1,700, ₹2,600, ₹4,000) plus a separate “from ₹100/GB/month” line.
+- FiveM is quote-based.
+- Discord bot plans: ₹39, ₹59, and ₹110 per month.
+- Bare metal is an enquiry. Shield is described without a capacity or price.
+- Network India is a route and site map naming Mumbai, Noida, and other cities. It is not treated as colocation inventory.
+- Germany is named on some product pages. The United States is marked on demand.
 
-## Deploy on Vercel
+## Not confirmed
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- `https://client.cyrohost.com/` timed out, including `/store`. No live catalogue was imported.
+- `vps.cyrohost.com` did not resolve. It is still linked because it is the panel URL supplied for the project.
+- `status.cyrohost.com` and the apex host `cyrohost.com` did not resolve from this environment. `www.cyrohost.com` did.
+- `i.cyro.host`, the Discord-bot checkout host on the current site, did not resolve.
+- `webhost.html` returned 404, so website-hosting prices are not shown.
+- VDS, RDP, and S3-compatible storage had no public specification. Those routes are enquiries.
+- IP transit, BGP, and IP leasing had no published capacity, ASN, peer, or pool size.
+- Operating system images were not listed. This site does not claim Windows, Ubuntu, or AlmaLinux.
+- Customer quotes on the current homepage were not republished.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Lighthouse
+
+Measured on 3 October 2026 against the production server, after the theme system and demand-rendered hero.
+
+| | Performance | Accessibility | Best practices | SEO |
+| --- | --- | --- | --- | --- |
+| Desktop | 94 | 100 | 100 | 100 |
+| Mobile | 95 | 100 | 100 | 100 |
+
+Desktop FCP 0.5 s, LCP 0.7 s, TBT 190 ms, CLS 0. Mobile FCP 1.1 s, LCP 2.1 s, TBT 220 ms, CLS 0. Phones use the static rack drawing. Desktop still compiles the WebGL entrance on the main thread, so the performance score can move between runs.
+
+To repeat the audits after `npm run build && npm start`:
+
+```bash
+npx lighthouse http://localhost:3000 --only-categories=performance,accessibility,best-practices,seo --preset=desktop --output=html --output-path=./lighthouse-desktop.html
+npx lighthouse http://localhost:3000 --only-categories=performance,accessibility,best-practices,seo --form-factor=mobile --screenEmulation.mobile=true --output=html --output-path=./lighthouse-mobile.html
+```
+
+Chrome or Chromium has to be installed. The table above is from the audits run on 3 October 2026. Re-run the commands after further changes.
