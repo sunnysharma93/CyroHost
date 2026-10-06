@@ -10,7 +10,7 @@ From `backend/`:
 docker compose up -d
 ```
 
-The compose file uses database `cyrohost`, user `cyrohost`, and password `cyrohost` unless you override `POSTGRES_DB`, `POSTGRES_USER`, and `POSTGRES_PASSWORD`. Change that password before any shared machine. Flyway creates the tables on API startup.
+Set `POSTGRES_PASSWORD` before `docker compose up`. The database name and user default to `cyrohost`. The volume keeps the password it was created with. Flyway creates the tables on API startup.
 
 ## Run the API
 
@@ -19,7 +19,7 @@ export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
 export JWT_SECRET="$(openssl rand -base64 48)"
 export DB_URL=jdbc:postgresql://localhost:5432/cyrohost
 export DB_USERNAME=cyrohost
-export DB_PASSWORD=cyrohost
+export DB_PASSWORD="$POSTGRES_PASSWORD"
 export FRONTEND_ORIGIN=http://localhost:3000
 export COOKIE_SECURE=false
 cd backend

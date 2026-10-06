@@ -30,14 +30,21 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files
+# env files and local secrets
 .env
+.env.*
+!.env.example
+!backend/.env.example
 backend/.env
 backend/target/
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+*.key
+id_rsa
+id_ed25519
+
+# IDE
+.idea/
+*.iml
+.vscode/
 
 # vercel
 .vercel

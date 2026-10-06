@@ -1,0 +1,89 @@
+# Images are pulled from the registry. This file does not build source and does not publish PostgreSQL.
+# Create .env on the server from .env.example. Deploy updates only the two image variables.
+
+name: cyrohost
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-cyrohost}
+      POSTGRES_USER: ${POSTGRES_USER:}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:}
+    volumes:
+      - cyrohost_pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+    networks:
+      - cyrohost
+    security_opt:
+      - no-new-privileges:true
+
+  backend:
+    image: ${CYROHOST_BACKEND_IMAGE:?Set CYROHOST_BACKEND_IMAGE}
+    environment:
+      SERVER_PORT: "8080"
+      SERVER_FORWARD_HEADERS: ${SERVER_FORWARD_HEADERS:-none}
+      DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-cyrohost}
+      DB_USERNAME: ${POSTGRES_USER:-cyrohost}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET}
+      JWT_ISSUER: ${JWT_ISSUER:-cyrohost}
+      FRONTEND_ORIGIN: ${FRONTEND_ORIGIN:?Set FRONTEND_ORIGIN}
+      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:?Set PUBLIC_BASE_URL}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      EXPOSE_DEV_RESET_TOKEN: ${EXPOSE_DEV_RESET_TOKEN:-false}
+      MAIL_HOST: ${MAIL_HOST:-}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_USERNAME: ${MAIL_USERNAME:-}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+      MAIL_FROM: ${MAIL_FROM:-}
+      ADMIN_NOTIFICATION_EMAIL: ${ADMIN_NOTIFICATION_EMAIL:-cyrohostsponsorship@gmail.com}
+      CYROHOST_ADMIN_EMAIL: ${CYROHOST_ADMIN_EMAIL:-}
+      CYROHOST_ADMIN_PASSWORD: ${CYROHOST_ADMIN_PASSWORD:-}
+      CYROHOST_ADMIN_UPGRADE: ${CYROHOST_ADMIN_UPGRADE:-false}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      FACEBOOK_CLIENT_ID: ${FACEBOOK_CLIENT_ID:-}
+      FACEBOOK_CLIENT_SECRET: ${FACEBOOK_CLIENT_SECRET:-}
+      APPLE_CLIENT_ID: ${APPLE_CLIENT_ID:-}
+      APPLE_TEAM_ID: ${APPLE_TEAM_ID:-}
+      APPLE_KEY_ID: ${APPLE_KEY_ID:-}
+      APPLE_PRIVATE_KEY: ${APPLE_PRIVATE_KEY:-}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "${BACKEND_PUBLISH_PORT:-8080}:8080"
+    restart: unless-stopped
+    networks:
+      - cyrohost
+    security_opt:
+      - no-new-privileges:true
+
+  frontend:
+    image: ${CYROHOST_FRONTEND_IMAGE:?Set CYROHOST_FRONTEND_IMAGE}
+    environment:
+      CONTACT_WEBHOOK_URL: ${CONTACT_WEBHOOK_URL:-}
+      PORT: "3000"
+      HOSTNAME: 0.0.0.0
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "${FRONTEND_PUBLISH_PORT:-3000}:3000"
+    restart: unless-stopped
+    networks:
+      - cyrohost
+    security_opt:
+      - no-new-privileges:true
+
+volumes:
+  cyrohost_pg:
+
+networks:
+  cyrohost:
